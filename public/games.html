@@ -7,14 +7,12 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
   <link rel="stylesheet" href="styles/main.css">
-  <!-- Chessboard JS style-->
+  <!-- Chessboard JS -->
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
   <title>Chess App</title>
 </head>
 
 <body>
-
-  <!-- Drawer -->
   <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
     <header class="bmd-layout-header">
       <div class="navbar navbar-light bg-faded justify-content-start">
@@ -24,7 +22,7 @@
         </button>
         <!-- TODO: Center Chess App -->
         <ul class="nav navbar-nav">
-          <li class="nav-item"> &nbsp;&nbsp; Chess App</li>
+          <li class="nav-item"> &nbsp;&nbsp; Games</li>
         </ul>
       </div>
     </header>
@@ -34,28 +32,25 @@
         <a class="navbar-brand">Chess App</a>
       </header>
       <ul class="list-group">
-        <a class="list-group-item" href="/">Home</a>
-        <a class="list-group-item" href="/friends.html">Friends</a>
-        <a class="list-group-item"href="/games.html" >Games</a>
+        <a class="list-group-item">Link 1</a>
+        <a class="list-group-item">Link 2</a>
+        <a class="list-group-item">Link 3</a>
       </ul>
     </div>
     
     <main class="bmd-layout-content">
       <div id="mainPage" class="container page-container">
-
         <div id="opponentContainer" class="row justify-content-center square">
-          <div class="col text-left">thedavidpurdy &nbsp;&nbsp; (846)</div>
-          <div class="col text-center">Score +8</div>
+          Test
         </div>
     
         <div id="gameBoard" class="row justify-content-center square">
-          <div id="myBoard" class="justify-content-center" style="width: 25rem"></div>
+          <div id="myBoard" class="justify-content-center" style="width: 400px"></div>
               
         </div>
     
         <div id="playerContainer" class="row justify-content-center square">
-          <div class="col text-left">thesamjohnson &nbsp;&nbsp; (1046)</div>
-          <div class="col text-center">Score: +4</div>
+          Test
         </div>
     
       </div>
@@ -74,7 +69,6 @@
   <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
   <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
   <script src="/__/firebase/init.js"></script>
-  <!-- Chess board and functionality -->
   <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous"></script>
   <script src="scripts/main.js"></script>

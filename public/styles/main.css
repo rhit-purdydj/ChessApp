@@ -1,12 +1,46 @@
 body {
     background: #DDDDDD;
+    background-image: url("https://www.transparenttextures.com/patterns/black-mamba.png");
 }
 
 .navbar {
-    background-color: #800000;
+    background-color: #5B859E;
     color: white;
 }
 
 .page-container {
-    margin-top: 75px;
+    margin-top: 10px;
+}
+
+.square {
+    background-color: #5B859E;
+    margin: auto auto;
+    padding: auto auto;
+}
+
+#gameBoard {
+    height: 60vh;
+    margin-top: 10px;
+}
+
+#opponentContainer {
+    height: 10vh;
+    background-color: #264553;
+    border: 2px solid black;
+}
+
+#playerContainer {
+    background-color: #264553;
+    border: 2px solid black;
+    height: 10vh;
+    margin-top: 10px;
+}
+
+.square>div {
+    color: white;
+}
+
+
+#myBoard {
+    margin-top: 1rem;
 }
