@@ -7,12 +7,14 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Material+Icons">
   <link rel="stylesheet" href="styles/bootstrap-material-design.min.css">
   <link rel="stylesheet" href="styles/main.css">
-  <!-- Chessboard JS -->
+  <!-- Chessboard JS style-->
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
-  <title>Friends</title>
+  <title>Friends Page</title>
 </head>
 
 <body>
+
+  <!-- Drawer -->
   <div class="bmd-layout-container bmd-drawer-f-l bmd-drawer-overlay">
     <header class="bmd-layout-header">
       <div class="navbar navbar-light bg-faded justify-content-start">
@@ -32,27 +34,46 @@
         <a class="navbar-brand">Chess App</a>
       </header>
       <ul class="list-group">
-        <a class="list-group-item">Link 1</a>
-        <a class="list-group-item">Link 2</a>
-        <a class="list-group-item">Link 3</a>
+        <a class="list-group-item" href="/">Home</a>
+        <a class="list-group-item" href="/friends.html">Friends</a>
+        <a class="list-group-item"href="/games.html" >Games</a>
       </ul>
     </div>
     
     <main class="bmd-layout-content">
-      <div id="mainPage" class="container page-container">
-        <div id="opponentContainer" class="row justify-content-center square">
-          Test
+      <div id="friendPage" class="container page-container friend-page-square">
+
+        <div class="row friend-row">
+          <div class="col text-center "><h2>Friends</h2></div>
         </div>
-    
-        <div id="gameBoard" class="row justify-content-center square">
-          <div id="myBoard" class="justify-content-center" style="width: 400px"></div>
-              
+        
+        <div class="row friend-row">
+          <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+          <div class="col text-center"><h3>nicole13(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
         </div>
-    
-        <div id="playerContainer" class="row justify-content-center square">
-          Test
+
+        <div class="row friend-row">
+          <div class="col text-center"><h3>willebman(332) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+          <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
         </div>
+
+        <div class="row friend-row">
+          <div class="col text-center"><h3>legend27(1500) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+          <div class="col text-center"><h3>jackraker1(1802) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        </div>
+
+        
+        <div class="row friend-row">
+          <div class="col text-center"><h3>carlquis(855) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+          <div class="col text-center"><h3>monstertruck12(985) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        </div>
+
     
+        <div class="row friend-row">
+          <div class="col text-center">&nbsp;</div>
+          <div class="col text-center">&nbsp;</div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -69,6 +90,7 @@
   <script src="/__/firebase/7.18.0/firebase-auth.js"></script>
   <script src="/__/firebase/7.18.0/firebase-firestore.js"></script>
   <script src="/__/firebase/init.js"></script>
+  <!-- Chess board and functionality -->
   <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js" integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js" integrity="sha512-xRllwz2gdZciIB+AkEbeq+gVhX8VB8XsfqeFbUh+SzHlN96dEduwtTuVuc2u9EROlmW9+yhRlxjif66ORpsgVA==" crossorigin="anonymous"></script>
   <script src="scripts/main.js"></script>

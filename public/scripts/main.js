@@ -93,4 +93,7 @@ var config = {
     onMouseoverSquare: onMouseoverSquare,
     onSnapEnd: onSnapEnd
 }
-board = Chessboard('myBoard', config)
+
+if (document.getElementById("mainPage")) {
+    board = Chessboard('myBoard', config)
+}
