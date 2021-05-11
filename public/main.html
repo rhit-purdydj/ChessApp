@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles/main.css">
   <!-- Chessboard JS style-->
   <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css" integrity="sha384-q94+BZtLrkL1/ohfjR8c6L+A6qzNH9R2hBLwyoAfu3i/WCvQjzL2RQJ3uNHDISdU" crossorigin="anonymous">
-  <title>Friends Page</title>
+  <title>Chess App</title>
 </head>
 
 <body>
@@ -24,7 +24,7 @@
         </button>
         <!-- TODO: Center Chess App -->
         <ul class="nav navbar-nav">
-          <li class="nav-item"> &nbsp;&nbsp; Friends</li>
+          <li class="nav-item"> &nbsp;&nbsp; Chess App</li>
         </ul>
       </div>
     </header>
@@ -41,39 +41,22 @@
     </div>
     
     <main class="bmd-layout-content">
-      <div id="friendPage" class="container page-container friend-page-square">
+      <div id="mainPage" class="container page-container">
 
-        <div class="row friend-row">
-          <div class="col text-center "><h2>Friends</h2></div>
+        <div id="opponentContainer" class="row justify-content-center square">
+          <div id="opponentLabel" class="col text-left">thedavidpurdy &nbsp;&nbsp; <span id="opponentScore">(846)</span></div>
+          <div class="col text-center">Score +8</div>
         </div>
-        
-        <!-- <div class="row friend-row">
-          <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-          <div class="col text-center"><h3>nicole13(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        </div>
-
-        <div class="row friend-row">
-          <div class="col text-center"><h3>willebman(332) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-          <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        </div>
-
-        <div class="row friend-row">
-          <div class="col text-center"><h3>legend27(1500) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-          <div class="col text-center"><h3>jackraker1(1802) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        </div>
-
-        
-        <div class="row friend-row">
-          <div class="col text-center"><h3>carlquis(855) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-          <div class="col text-center"><h3>monstertruck12(985) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        </div>
-
     
-        <div class="row friend-row">
-          <div class="col text-center">&nbsp;</div>
-          <div class="col text-center">&nbsp;</div>
-        </div> -->
-
+        <div id="gameBoard" class="row justify-content-center square">
+          <div id="myBoard" class="justify-content-center" style="width: 25rem"></div>
+        </div>
+    
+        <div id="playerContainer" class="row justify-content-center square">
+          <div id="playerLabel" class="col text-left">thesamjohnson &nbsp;&nbsp; <span id="userScore">(846)</span></div>
+          <div class="col text-center">Score: +4</div>
+        </div>
+    
       </div>
     </main>
   </div>

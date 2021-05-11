@@ -195,7 +195,9 @@ rhit.FriendManager = class {
     constructor(uid) {
         this._documentSnapshot = null;
         this._unsubscribe = null;
+        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).where("uid", "in", this_user.friend_ids)
         this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(uid);
+        this._uid = uid;
     }
 
     beginListening(changeListener) {
@@ -232,17 +234,26 @@ rhit.FriendManager = class {
 
 rhit.FriendController = class {
     constructor() {
-        console.log("does this happen");
+
         rhit.friendManager.beginListening(this.updateView.bind(this));
+
+        console.log("here");
+
     }
 
     updateView() {
 
-        console.log("Does this happen 2 ");
+        console.log("Makes it to update view from the listener");
         const newList = htmlToElement('<div id="friendPage" class="container page-container friend-page-square"></div>');
 
-        for (let i = 0; i < rhit.friendManager.friends.length; i++) {
-            const newCard = this._populateFriendPage(rhit.friendManager.friends[i]);
+        for (let i = 0; i < rhit.friendManager.friends.length; i += 2) {
+            let f1 = rhit.friendManager.friends[i];
+            let f2 = rhit.friendManager.friends[i + 1];
+            console.log(f1, f2);
+            let newCard;
+            if (f1 && f2)
+                newCard = this._populateFriendPage(f1, f2);
+
             newCard.onclick = (event) => {
                 //TODO: Create a new game
 
@@ -260,19 +271,20 @@ rhit.FriendController = class {
         oldList.parentElement.appendChild(newList);
     }
 
-    _populateFriendPage() {
+    _populateFriendPage(friend1, friend2) {
         return htmlToElement(`<div class="row friend-row">
-        <div class="col text-center"><h3>(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        <div class="col text-center"><h3>nicole13(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        <div class="col text-center"><h3>${friend1}(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        <div class="col text-center"><h3>${friend2}(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
       </div>`);
     }
 }
 
 rhit.initializePage = function () {
     const urlParams = new URLSearchParams(window.location.search);
-    const uid = urlParams.get("uid");
-
-    if (document.querySelector("#mainPage")) {
+    // const uid = urlParams.get("uid");
+    const uid = firebase.auth().currentUser;
+    console.log(uid);
+    if ($("#mainPage")) {
         const gameId = urlParams.get("gameId");
         if (gameId) {
             rhit.boardManager = new rhit.BoardManager(gameId);
@@ -280,14 +292,18 @@ rhit.initializePage = function () {
         }
     }
 
-    if (document.querySelector("#friendPage")) {
+    if ($("#friendPage")) {
         //once logged in the auth manager is the one to create the user in firestore. 
         // friend page can then only update the users
         if (uid) {
+            console.log("theres a uid and it creates both");
             rhit.friendManager = new rhit.FriendManager(uid);
             new rhit.FriendController();
-        }
+        } else
+            console.log("Theres no uid so it doesn't create either");
     }
+
+
 
 }
 
