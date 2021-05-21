@@ -105,6 +105,21 @@ h2 {
     font-size: 17px;
 }
 
+#fab {
+    background-color: #5B859E;
+    bottom: 10px;
+    color: white;
+    position: fixed;
+    right: 10px;
+    z-index: 999;
+}
+
+#fab:active {
+    transform: translateY(2px);
+    opacity: 0.8;
+}
+
+
 .navbar .sBtn {
     float: right;
     padding: 6px 10px;
@@ -114,4 +129,8 @@ h2 {
     font-size: 17px;
     border: none;
     cursor: pointer;
+}
+
+#signOutButton {
+    color: #3f51b5;
 }

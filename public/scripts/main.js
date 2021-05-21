@@ -1,3 +1,11 @@
+/**
+ * @fileoverview
+ * Provides the JavaScript interactions for all the pages.
+ *
+ * @author 
+ * David Purdy
+ */
+
 var rhit = rhit || {};
 var board = null;
 var game = null;
@@ -9,22 +17,29 @@ rhit.FB_KEY_WHITE_USER = "whitePlayerUser";
 rhit.FB_KEY_GAME_BOARD_STRING = "gameBoardString";
 rhit.FB_KEY_IS_OVER = "isOver";
 rhit.FB_KEY_IS_WHITE = "isWhiteTurn";
-rhit.FB_KEY_FRIENDS = "friends";
-rhit.FB_KEY_USER_ID = "userID";
+rhit.FB_KEY_WHITE_SCORE = "whiteScore";
+rhit.FB_KEY_BLACK_SCORE = "blackScore";
+rhit.FB_KEY_USER_FRIENDS = "friends";
+rhit.FB_KEY_USER_ID = "userId";
+rhit.FB_KEY_USER_GAME_ID_LIST = "gameIdList";
+rhit.FB_KEY_USER_NAME = "username";
+rhit.FB_KEY_USER_EMAIL = "email";
 
 rhit.Game = class {
     constructor() {
         game = new Chess();
         this.boardPosition = null;
         //TODO: This is broken
+        console.log("here");
+        // rhit.singleGameManger.beginListening(this.updateView.bind(this));
 
-        rhit.boardManager.beginListening(this.updateView.bind(this));
+        // if (rhit.singleGameManger.boardString) {
+        //     console.log("is the gameBoardStringStart");
+        //     this.boardPosition = rhit.singleGameManger.boardString;
+        // } else {
 
-        if (rhit.boardManager.gameBoardString) {
-            console.log("is the gameBoardStringStart");
-            this.boardPosition = rhit.boardManager.gameBoardString;
-        }
         this.boardPosition = "start";
+        // }
         if (game) {
             var config = {
                 draggable: true,
@@ -38,6 +53,7 @@ rhit.Game = class {
             }
             if (document.getElementById("mainPage")) {
                 board = Chessboard('myBoard', config)
+                console.log(board);
             }
         }
     }
@@ -68,7 +84,6 @@ rhit.Game = class {
 
     onMouseoverSquare(square, piece) {
         // get list of possible moves for this square
-        // console.log(game);
         var moves = game.moves({
             square: square,
             verbose: true
@@ -92,7 +107,7 @@ rhit.Game = class {
 
     onSnapEnd() {
         board.position(game.fen());
-        rhit.boardManager.update(game.fen(), game.game_over(), game.turn() === 'w');
+        rhit.singleGameManger.update(game.fen(), game.game_over(), game.turn() === 'w');
     }
     //white pieces get white png
     pieceTheme(piece) {
@@ -101,8 +116,8 @@ rhit.Game = class {
         return 'images/chesspieces/' + piece + '.png';
     }
 
-    updateView() {
-
+    get boardString() {
+        return this.boardPosition;
     }
 }
 
@@ -127,17 +142,79 @@ function htmlToElement(html) {
 }
 
 rhit.BoardManager = class {
-    constructor(gameId) {
+    constructor() {
         this._documentSnapshot = null;
         this._unsubscribe = null;
-        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_GAMES).doc(gameId);
+        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_GAMES);
+    }
+
+    createNewGame(player1, player2) {
+        let white, black;
+        if (Math.random() < 0.5) {
+            white = player1;
+            black = player2;
+        } else {
+            black = player1
+            white = player2;
+        }
+        rhit.game = new rhit.Game();
+        this.add(white, black);
+    }
+
+    add(white, black) {
+        this._ref.add({
+                [rhit.FB_KEY_WHITE_USER]: white,
+                [rhit.FB_KEY_BLACK_USER]: black,
+                [rhit.FB_KEY_IS_WHITE]: true,
+                [rhit.FB_KEY_IS_OVER]: false,
+                [rhit.FB_KEY_GAME_BOARD_STRING]: rhit.game.boardString,
+                [rhit.FB_KEY_WHITE_SCORE]: 0,
+                [rhit.FB_KEY_BLACK_SCORE]: 0
+            }).then(docRef => {
+                console.log("added sucessfully", docRef.id);
+                // rhit.singleGameManger = new rhit.SingleGameManager(docRef.id);
+                window.location.href = `/main.html?id=${docRef.id}`;
+            })
+            .catch(function (error) {
+                console.log("error", error);
+            });
     }
 
     beginListening(changeListener) {
         this._ref.onSnapshot((doc) => {
             if (doc.exists) {
-                console.log('doc.data :>> ', doc.data());
                 this._documentSnapshot = doc;
+                changeListener();
+            }
+        });
+    }
+
+    stopListening() {
+        this._unsubscribe();
+    }
+
+    getGameAtIndex(index) {
+        const ds = this._documentSnapshot;
+        console.log(ds);
+    }
+}
+
+
+rhit.SingleGameManager = class {
+
+    constructor(gameId) {
+        console.log(gameId);
+        this._documentSnapshot = null;
+        this._unsubscribe = null;
+        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_GAMES).where("id", "==", gameId);
+        rhit.game = new rhit.Game();
+    }
+
+    beginListening(changeListener) {
+        this._ref.onSnapshot((doc) => {
+            if (doc.exists) {
+                this._documentSnapshot = doc;
+                console.log(this._documentSnapshot);
                 changeListener();
             }
         });
@@ -146,27 +223,8 @@ rhit.BoardManager = class {
         this._unsubscribe();
     }
 
-    update(gameBoardString, isOver, isWhiteTurn) {
-        this._ref.update({
-                [rhit.FB_KEY_GAME_BOARD_STRING]: gameBoardString,
-                [rhit.FB_KEY_IS_OVER]: isOver,
-                [rhit.FB_KEY_IS_WHITE]: isWhiteTurn,
-            })
-            .then(function () {
-                console.log("updated sucessfully");
-            })
-            .catch(function (error) {
-                console.log("error", error);
-            });
-    }
-
     delete() {
         return this._ref.delete();
-    }
-
-    getGameAtIndex(index) {
-        const ds = this._documentSnapshot;
-        console.log(ds);
     }
 
     get gameBoardString() {
@@ -177,6 +235,7 @@ rhit.BoardManager = class {
     get isWhiteTurn() {
         return this._documentSnapshot.get(rhit.FB_KEY_IS_WHITE);
     }
+
     get isOver() {
         return this._documentSnapshot.get(rhit.FB_KEY_IS_OVER);
     }
@@ -191,28 +250,29 @@ rhit.BoardManager = class {
 
 }
 
+
 rhit.FriendManager = class {
-    constructor(uid) {
-        this._documentSnapshot = null;
+    constructor() {
+        this._snapshot = null;
         this._unsubscribe = null;
-        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).where("uid", "in", this_user.friend_ids)
-        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).doc(uid);
-        this._uid = uid;
+        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).where("email", "==", rhit.authManager.user.email);
     }
 
     beginListening(changeListener) {
-        this._ref.onSnapshot((doc) => {
-            if (doc.exists) {
-                console.log('doc.data :>> ', doc.data());
-                this._documentSnapshot = doc;
-                changeListener();
-            }
+        this._unsubscribe = this._ref.get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                this._snapshot = doc;
+                if (changeListener)
+                    changeListener();
+            });
         });
     }
 
     update(friend) {
+        let friends = this._snapshot.get(rhit.FB_KEY_USER_FRIENDS);
+        friends.append(friend);
         this._ref.update({
-                [rhit.FB_KEY_FRIENDS]: friend,
+                [rhit.FB_KEY_USER_FRIENDS]: friends,
             })
             .then(function () {
                 console.log("updated sucessfully");
@@ -227,82 +287,199 @@ rhit.FriendManager = class {
     }
 
     get friends() {
-        return this._documentSnapshot.get(rhit.FB_KEY_FRIENDS);
+        return this._snapshot.get(rhit.FB_KEY_USER_FRIENDS);
     }
 
 }
 
+rhit.AuthManager = class {
+    constructor() {
+        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+    }
+
+    beginListening(changeListener) {
+        firebase.auth().onAuthStateChanged((user) => {
+            changeListener();
+        });
+    };
+
+    signOut() {
+        firebase.auth().signOut()
+            .catch(function (error) {
+                console.log("Sign Out Error");
+            });
+    };
+
+    //add account to the firestore if it doesn't already exist 
+    addAccountToFirestore(user) {
+        console.log("User", user);
+        let email = null;
+        if (user.email)
+            email = user.email;
+        let username = email.substr(0, email.indexOf('@'));
+        console.log("Username ", username);
+        this.add(user, username);
+    };
+
+    add(user, username) {
+        this._ref.add({
+            [rhit.FB_KEY_USER_ID]: user.uid,
+            [rhit.FB_KEY_USER_NAME]: username,
+            [rhit.FB_KEY_USER_EMAIL]: user.email,
+            [rhit.FB_KEY_USER_FRIENDS]: [],
+            [rhit.FB_KEY_USER_GAME_ID_LIST]: []
+        }).then((docRef) => {
+            console.log("user added successfully");
+        }).catch((error) => {
+            console.log("error in adding user");
+        });
+    }
+
+    get isSignedIn() {
+        return !!firebase.auth().currentUser;
+    }
+
+    get user() {
+        return firebase.auth().currentUser;
+    }
+}
+
 rhit.FriendController = class {
     constructor() {
-
+        $("#signOutButton").click(() => {
+            rhit.authManager.signOut();
+        });
         rhit.friendManager.beginListening(this.updateView.bind(this));
-
-        console.log("here");
-
     }
 
     updateView() {
-
-        console.log("Makes it to update view from the listener");
-        const newList = htmlToElement('<div id="friendPage" class="container page-container friend-page-square"></div>');
-
-        for (let i = 0; i < rhit.friendManager.friends.length; i += 2) {
+        const newList = htmlToElement(`<div id="friendList"></div>`);
+        console.log("friends ", rhit.friendManager.friends);
+        for (let i = 0; i < rhit.friendManager.friends.length; i++) {
             let f1 = rhit.friendManager.friends[i];
-            let f2 = rhit.friendManager.friends[i + 1];
-            console.log(f1, f2);
+            console.log(f1);
             let newCard;
-            if (f1 && f2)
-                newCard = this._populateFriendPage(f1, f2);
+            if (f1)
+                newCard = this._populateFriendPage(f1);
 
             newCard.onclick = (event) => {
-                //TODO: Create a new game
-
-                // console.log(`clicked on the card id ${p.id}`);
-                // window.location.href = `/photobucket.html?id=${p.id}`;
+                console.log("the button has been clicked");
+                console.log(rhit.authManager.user.email);
+                rhit.boardManager.createNewGame(rhit.authManager.user.email, f1);
             };
 
             newList.appendChild(newCard);
         }
 
-        const oldList = document.querySelector("#friendPage");
+        const oldList = document.querySelector("#friendList");
         oldList.removeAttribute("id");
         oldList.hidden = true;
-
         oldList.parentElement.appendChild(newList);
     }
 
-    _populateFriendPage(friend1, friend2) {
+    _populateFriendPage(friend1) {
         return htmlToElement(`<div class="row friend-row">
-        <div class="col text-center"><h3>${friend1}(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
-        <div class="col text-center"><h3>${friend2}(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        <div class="col text-center" data-friend="${friend1}"><h3>${friend1}&nbsp; <span class="material-icons">open_in_new</span></h3></div>
       </div>`);
     }
 }
 
+rhit.LoginController = class {
+    constructor() {
+
+
+    }
+}
+
+rhit.MainPageController = class {
+    constructor() {
+        $("#signOutButton").click(() => {
+            rhit.authManager.signOut();
+        });
+
+        rhit.singleGameManger.beginListening(this.updateView.bind(this));
+    }
+
+    updateView() {
+        console.log("here");
+        $("#playerLabel").innerHTML = `${rhit.authManager.user}`;
+    }
+}
+
+rhit.GamePageController = class {
+    constructor() {
+        $("#signOutButton").click(() => {
+            rhit.authManager.signOut();
+        });
+    }
+}
+
+rhit.checkForRedirects = function () {
+
+
+    //this is too fast and it won't put stuff in the database? 
+    // if (document.querySelector("#loginPage") && rhit.authManager.isSignedIn) {
+    //     window.location.href = "/main.html";
+    // }
+
+    if (!document.querySelector("#loginPage") && !rhit.authManager.isSignedIn) {
+        window.location.href = "/";
+    }
+};
+
+rhit.firebaseui = function () {
+    var uiConfig = {
+        callbacks: {
+            signInSuccessWithAuthResult: function (authResult, redirectUrl) {
+                //if it is a new user add them to firestore users
+                console.log("signs in successfully", authResult.additionalUserInfo.isNewUser);
+
+                if (authResult.additionalUserInfo.isNewUser)
+                    rhit.authManager.addAccountToFirestore(authResult.user);
+                return true;
+            }
+        },
+        signInSuccessUrl: '/main.html',
+        signInOptions: [
+            firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+            firebase.auth.EmailAuthProvider.PROVIDER_ID
+        ]
+    };
+    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+    ui.start('#firebaseui-auth-container', uiConfig);
+}
+
+
 rhit.initializePage = function () {
     const urlParams = new URLSearchParams(window.location.search);
-    // const uid = urlParams.get("uid");
     const uid = firebase.auth().currentUser;
-    console.log(uid);
-    if ($("#mainPage")) {
-        const gameId = urlParams.get("gameId");
+
+    if (document.querySelector("#mainPage")) {
+        console.log("main page being created");
+        const gameId = urlParams.get("id");
         if (gameId) {
-            rhit.boardManager = new rhit.BoardManager(gameId);
-            new rhit.Game();
+            rhit.singleGameManger = new rhit.SingleGameManager(gameId);
+            // new rhit.Game();
         }
+        new rhit.MainPageController();
     }
 
-    if ($("#friendPage")) {
-        //once logged in the auth manager is the one to create the user in firestore. 
-        // friend page can then only update the users
+    if (document.querySelector("#friendPage")) {
         if (uid) {
-            console.log("theres a uid and it creates both");
-            rhit.friendManager = new rhit.FriendManager(uid);
+            rhit.friendManager = new rhit.FriendManager();
             new rhit.FriendController();
         } else
-            console.log("Theres no uid so it doesn't create either");
+            console.log("There is no uid so the friend manager is not created");
     }
 
+    if (document.querySelector("#gamePage")) {
+        new rhit.GamePageController();
+    }
+
+
+    if (document.querySelector("#loginPage")) {
+        rhit.firebaseui();
+    }
 
 
 }
@@ -310,7 +487,13 @@ rhit.initializePage = function () {
 
 /* Main */
 rhit.main = function () {
-    rhit.initializePage();
+    rhit.authManager = new rhit.AuthManager();
+    rhit.boardManager = new rhit.BoardManager();
+
+    rhit.authManager.beginListening(() => {
+        rhit.checkForRedirects();
+        rhit.initializePage();
+    });
 };
 
 rhit.main();

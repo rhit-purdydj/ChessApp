@@ -22,10 +22,10 @@
           <span class="sr-only">Toggle drawer</span>
           <i class="material-icons">menu</i>
         </button>
-        <!-- TODO: Center Chess App -->
         <ul class="nav navbar-nav">
-          <li class="nav-item"> &nbsp;&nbsp; Friends</li>
+          <li class="nav-item"> &nbsp;&nbsp; Friends &nbsp;&nbsp;</li>
         </ul>
+        
       </div>
     </header>
 
@@ -34,9 +34,10 @@
         <a class="navbar-brand">Chess App</a>
       </header>
       <ul class="list-group">
-        <a class="list-group-item" href="/">Home</a>
+        <a class="list-group-item" href="/main.html">Home</a>
         <a class="list-group-item" href="/friends.html">Friends</a>
         <a class="list-group-item"href="/games.html" >Games</a>
+        <a class="list-group-item" id="signOutButton">Sign Out</a>
       </ul>
     </div>
     
@@ -47,6 +48,12 @@
           <div class="col text-center "><h2>Friends</h2></div>
         </div>
         
+        <div id="friendList">
+          <!-- <div class="row friend-row">
+            <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+            <div class="col text-center"><h3>nicole13(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+          </div> -->
+        </div>
         <!-- <div class="row friend-row">
           <div class="col text-center"><h3>samjohnson(385) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
           <div class="col text-center"><h3>nicole13(1025) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
@@ -78,7 +85,34 @@
     </main>
   </div>
 
+  <button type="button" id="fab" class="btn bmd-btn-fab" data-toggle="modal" data-target="#addFriendDialog">
+    <i class="material-icons">add</i>
+  </button>
+
   
+
+<!-- Modal -->
+<div class="modal fade" id="addFriendDialog" tabindex="-1" role="dialog" aria-labelledby="Add Friend Dialog" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add Friend</h5>
+      </div>
+
+      <div class="modal-body">
+          <div class="form-group bmd-form-group">
+            <label for="inputEmail" class="bmd-label-floating">Email</label>
+            <input type="text" class="form-control" id="inputEmail">
+          </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">CANCEL</button>
+        <button type="button" id="submitAddQuote" data-dismiss="modal" class="btn btn-primary">ADD FRIEND</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   </div>
   <script src="scripts/jquery.min.js"></script>
