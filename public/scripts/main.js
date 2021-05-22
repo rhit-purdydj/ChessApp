@@ -8,8 +8,15 @@
 
 var rhit = rhit || {};
 var board = null;
-var game = new Chess();
-
+var game = null;
+var gid = null;
+var gblackPlayer = null;
+var gwhitePlayer = null;
+var gboardString = null;
+var gisOver = null;
+var gisWhiteTurn = null;
+var gorientation = null;
+var currUser = null;
 
 rhit.FB_COLLECTION_GAMES = "games";
 rhit.FB_COLLECTION_USERS = "users";
@@ -28,32 +35,44 @@ rhit.FB_KEY_USER_EMAIL = "email";
 
 rhit.Game = class {
 
-    constructor(g) {
-        this._id = g.id;
-        this._whitePlayer = g.whitePlayerUser;
-        this._blackPlayer = g.blackPlayerUser;
-        this._boardString = g.gameBoardString;
-        this._isOver = g.isOver;
-        this._isWhiteTurn = g.isWhiteTurn;
+    constructor(id, g) {
+        game = new Chess();
+        // console.log("print when it makes a new game", g);
+        gid = id;
+        gwhitePlayer = g.whitePlayerUser;
+        gblackPlayer = g.blackPlayerUser;
+        gboardString = g.gameBoardString;
+        gisOver = g.isOver;
+        gisWhiteTurn = g.isWhiteTurn;
+        game.load(gboardString);
+        gorientation = "white";
+        console.log("black user", g.blackPlayerUser);
+        currUser = rhit.authManager.user.email;
+        if (gblackPlayer == currUser)
+            gorientation = "black";
+        this.initializeBoard();
     }
 
     initializeBoard() {
+        // console.log(this._boardString);
         if (game) {
             var config = {
                 draggable: true,
                 pieceTheme: this.pieceTheme,
-                position: this.boardPosition,
+                position: this._boardString,
                 onDragStart: this.onDragStart,
                 onDrop: this.onDrop,
                 onMouseoutSquare: this.onMouseoutSquare,
                 onMouseoverSquare: this.onMouseoverSquare,
-                onSnapEnd: this.onSnapEnd
+                onSnapEnd: this.onSnapEnd,
+                orientation: this._orientation
             }
             if (document.getElementById("mainPage")) {
                 board = Chessboard('myBoard', config)
-                console.log(board);
             }
         }
+        board.position(gboardString);
+        console.log("new board position", gboardString);
     }
 
     onDragStart(source, piece) {
@@ -64,6 +83,12 @@ rhit.Game = class {
             (game.turn() === 'b' && piece.search(/^w/) !== -1)) {
             return false;
         }
+
+        // console.log(currUser + game.turn());
+        if (currUser != gwhitePlayer && game.turn() === 'w')
+            return false;
+        else if (currUser != gblackPlayer && game.turn() === 'b')
+            return false
     }
 
     onDrop(source, target) {
@@ -104,10 +129,14 @@ rhit.Game = class {
     }
 
     onSnapEnd() {
+        // const id = new URLSearchParams(window.location.search).get("id");
+        // console.log(game.fen() + " " + game.game_over() + " " + game.turn() === 'w');
         board.position(game.fen());
-        rhit.singleGameManger.update(game.fen(), game.game_over(), game.turn() === 'w');
+        rhit.boardManager.update(gid, game.fen(), game.game_over(), game.turn() === 'w');
         if (game.game_over()) {
             //TODO: ADD end of game for if they are the current user or not
+            rhit.boardManager.remove(gid, gwhitePlayer, gblackPlayer);
+            alert("game over ! ");
         }
 
     }
@@ -120,6 +149,12 @@ rhit.Game = class {
 
     get boardString() {
         return this._boardString;
+    }
+    get whitePlayer() {
+        return this._whitePlayer;
+    }
+    get blackPlayer() {
+        return this._blackPlayer;
     }
 
 }
@@ -164,7 +199,24 @@ rhit.BoardManager = class {
         this.add(white, black);
     }
 
+    remove(id, white, black) {
+        let q = firebase.firestore().collection(rhit.FB_COLLECTION_USERS);
+        q.where("email", "==", white).limit(1).get().then((query) => {
+            query.docs[0].ref.update({
+                [rhit.FB_KEY_USER_GAME_ID_LIST]: firebase.firestore.FieldValue.arrayRemove(id),
+            });
+        });
+        q.where("email", "==", black).limit(1).get().then((query) => {
+            query.docs[0].ref.update({
+                [rhit.FB_KEY_USER_GAME_ID_LIST]: firebase.firestore.FieldValue.arrayRemove(id),
+            });
+        });
+    }
+
+
     add(white, black) {
+
+        // console.log("resetting the board at that location");
         this._ref.add({
                 [rhit.FB_KEY_WHITE_USER]: white,
                 [rhit.FB_KEY_BLACK_USER]: black,
@@ -191,15 +243,15 @@ rhit.BoardManager = class {
                 console.log("error", error);
             });
     }
-    //TODO: Update needs to be fixed
-    update(gameBoardString, isOver, isWhiteTurn) {
-        this._ref.update({
+
+    update(id, gameBoardString, isOver, isWhiteTurn) {
+        this._ref.doc(id).update({
                 [rhit.FB_KEY_GAME_BOARD_STRING]: gameBoardString,
                 [rhit.FB_KEY_IS_OVER]: isOver,
                 [rhit.FB_KEY_IS_WHITE]: isWhiteTurn,
             })
             .then(function () {
-                console.log("updated sucessfully");
+                console.log("updated sucessfully", gameBoardString);
             })
             .catch(function (error) {
                 console.log("error", error);
@@ -215,10 +267,8 @@ rhit.BoardManager = class {
 
     beginListening(changeListener) {
         this._unsubscribe = this._ref.limit(10).onSnapshot((querySnapshot) => {
-            if (doc.exists) {
-                this._documentSnapshots = querySnapshot.docs;
-                changeListener();
-            }
+            this._documentSnapshots = querySnapshot.docs;
+            changeListener();
         });
     }
 
@@ -296,76 +346,6 @@ rhit.GamePageManager = class {
     }
 }
 
-rhit.SingleGameManager = class {
-
-    constructor(gameId) {
-        console.log(gameId);
-        this._documentSnapshot = ref;
-        this._unsubscribe = null;
-        this._ref = firebase.firestore().collection(rhit.FB_COLLECTION_GAMES).doc(gameId);
-        // rhit.game = new rhit.Game();
-    }
-
-    beginListening(changeListener) {
-        this._ref.onSnapshot((doc) => {
-            if (doc.exists) {
-                this._documentSnapshot = doc;
-                console.log("this is the document snapshot", this._documentSnapshot.get(rhit.FB_KEY_GAME_BOARD_STRING));
-                changeListener();
-            }
-        });
-    }
-
-    update(gameBoardString, isOver, isWhiteTurn) {
-        this._ref.update({
-                [rhit.FB_KEY_GAME_BOARD_STRING]: gameBoardString,
-                [rhit.FB_KEY_IS_OVER]: isOver,
-                [rhit.FB_KEY_IS_WHITE]: isWhiteTurn,
-            })
-            .then(function () {
-                console.log("updated sucessfully");
-            })
-            .catch(function (error) {
-                console.log("error", error);
-            });
-    }
-
-    stopListening() {
-        this._unsubscribe();
-    }
-
-    delete() {
-        return this._ref.delete();
-    }
-
-    get gameBoardString() {
-        if (this._documentSnapshot) {
-            let x = this._documentSnapshot.get(rhit.FB_KEY_GAME_BOARD_STRING);
-            console.log("this is the board here ", x);
-            return x;
-        } else {
-            console.log("document snapshot doesn't exist yet");
-        }
-    }
-
-    get isWhiteTurn() {
-        return this._documentSnapshot.get(rhit.FB_KEY_IS_WHITE);
-    }
-
-    get isOver() {
-        return this._documentSnapshot.get(rhit.FB_KEY_IS_OVER);
-    }
-
-    get whitePlayer() {
-        return this._documentSnapshot.get(rhit.FB_KEY_WHITE_USER);
-    }
-
-    get blackPlayer() {
-        return this._documentSnapshot.get(rhit.FB_KEY_BLACK_USER);
-    }
-
-}
-
 rhit.FriendManager = class {
     constructor() {
         this._snapshot = null;
@@ -396,7 +376,7 @@ rhit.FriendManager = class {
         let query = firebase.firestore().collection(rhit.FB_COLLECTION_USERS).where(rhit.FB_KEY_USER_EMAIL, "==", friend);
         let bool;
         query.get().then((querySnapshot) => {
-            console.log("here");
+            // console.log("here");
             if (querySnapshot.length > 0)
                 bool = true;
         })
@@ -435,12 +415,12 @@ rhit.AuthManager = class {
 
     //add account to the firestore if it doesn't already exist 
     addAccountToFirestore(user) {
-        console.log("User", user);
+        // console.log("User", user);
         let email = null;
         if (user.email)
             email = user.email;
         let username = email.substr(0, email.indexOf('@'));
-        console.log("Username ", username);
+        // console.log("Username ", username);
         this.add(user, username);
     };
 
@@ -495,17 +475,17 @@ rhit.FriendController = class {
 
     updateView() {
         const newList = htmlToElement(`<div id="friendList"></div>`);
-        console.log("friends ", rhit.friendManager.friends);
+        // console.log("friends ", rhit.friendManager.friends);
         for (let i = 0; i < rhit.friendManager.friends.length; i++) {
             let f1 = rhit.friendManager.friends[i];
-            console.log(f1);
+            // console.log(f1);
             let newCard;
             if (f1)
                 newCard = this._populateFriendPage(f1);
 
             newCard.onclick = (event) => {
-                console.log("the button has been clicked");
-                console.log(rhit.authManager.user.email);
+                // console.log("the button has been clicked");
+                // console.log(rhit.authManager.user.email);
                 rhit.boardManager.createNewGame(rhit.authManager.user.email, f1);
                 //TODO: Tell users they created a new game
                 // window.location.href = `/main.html?id=${ rhit.boardManager.docId}`;
@@ -544,8 +524,8 @@ rhit.MainPageController = class {
 
     updateView() {
         // console.log("it is getting to the update view");
-        document.querySelector("#playerLabel").innerHTML = `${rhit.singleGameManger.whitePlayer}`;
-        document.querySelector("#opponentLabel").innerHTML = `${rhit.singleGameManger.blackPlayer}`;
+        document.querySelector("#playerLabel").innerHTML = `${gwhitePlayer}`;
+        document.querySelector("#opponentLabel").innerHTML = `${gblackPlayer}`;
     }
 }
 
@@ -554,7 +534,7 @@ rhit.GamePageController = class {
         $("#signOutButton").click(() => {
             rhit.authManager.signOut();
         });
-        console.log("game page constructed");
+        // console.log("game page constructed");
         rhit.gamePageManager.beginListening(this.updateView.bind(this));
     }
 
@@ -563,13 +543,14 @@ rhit.GamePageController = class {
         for (let i = 0; i < rhit.gamePageManager.games.length; i++) {
             let newCard;
             let g1 = await rhit.boardManager.getGameById(rhit.gamePageManager.games[i]);
+            console.log(g1);
             if (g1) {
                 let w = g1.whitePlayerUser.substr(0, g1.whitePlayerUser.indexOf('@'));
                 let b = g1.blackPlayerUser.substr(0, g1.blackPlayerUser.indexOf('@'));
                 newCard = this._populateGamePage(g1, w, b);
             }
             newCard.onclick = (event) => {
-                rhit.currentGame = new rhit.Game(g1);
+                // rhit.currentGame = new rhit.Game(g1);
                 window.location.href = `/main.html?id=${rhit.gamePageManager.games[i]}`;
             };
             newList.appendChild(newCard);
@@ -583,7 +564,7 @@ rhit.GamePageController = class {
 
     _populateGamePage(g1, w, b) {
         return htmlToElement(`<div class="row friend-row">
-        <div id="${g1.id}" class="col text-center" data-friend="${g1.id}"><h3>${w}(${g1.whiteScore}) vs. ${b}(${g1.blackScore}) &nbsp; <span class="material-icons">open_in_new</span></h3></div>
+        <div id="${g1.id}" class="col text-center" data-friend="${g1.id}"><h3>${w} vs. ${b} &nbsp; <span class="material-icons">open_in_new</span></h3></div>
       </div>`);
     }
 }
@@ -626,15 +607,18 @@ rhit.firebaseui = function () {
 }
 
 
-rhit.initializePage = function () {
+rhit.initializePage = async function () {
     const urlParams = new URLSearchParams(window.location.search);
     const uid = firebase.auth().currentUser;
 
     if (document.querySelector("#mainPage")) {
         const gameId = urlParams.get("id");
         if (gameId) {
+            // console.log("is hitting here again");
+            let g = await rhit.boardManager.getGameById(gameId);
+            // console.log("getting the object ", g);
+            rhit.currentGame = new rhit.Game(gameId, g);
             new rhit.MainPageController();
-            rhit.currentGame.initializeBoard();
         }
     }
 

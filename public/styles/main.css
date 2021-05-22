@@ -131,6 +131,10 @@ h2 {
     cursor: pointer;
 }
 
+.welcome {
+    text-align: center;
+}
+
 #signOutButton {
     color: #3f51b5;
 }
